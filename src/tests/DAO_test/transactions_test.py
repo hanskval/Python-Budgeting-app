@@ -7,12 +7,10 @@ import src.DAO.userDAO as userDAO
 
 class TestuserDAO(unittest.TestCase):
     def setUp(self):
-        # Alustetaan database ennen jokaista testiä
         initialize_database()
         self.connection = get_database_connection()
         self.transactions_dao = TransactionsDAO(self.connection)
         self.users_dao = userDAO.UserDAO(self.connection)
-        # Luo käyttäjän tietokantaan
         self.users_dao.create("testuser", "password123")
         id = self.users_dao.find_by_username("testuser")['id']
         self.transactions_dao.create(
@@ -32,7 +30,14 @@ class TestuserDAO(unittest.TestCase):
     
 
     def test_get_balance(self):
-        # Oletetaan, että käyttäjällä on
         user = self.users_dao.find_by_username("testuser")
         balance = self.transactions_dao.get_balance(user['id'])
         self.assertEqual(balance, 100.0)
+
+    def test_delete_transaction(self):
+        user = self.users_dao.find_by_username("testuser")
+        transactions = self.transactions_dao.find_by_user_id(user['id'])
+        transaction_id = transactions[0]['id']
+        self.transactions_dao.delete(transaction_id)
+        transactions_after_delete = self.transactions_dao.find_by_user_id(user['id'])
+        self.assertEqual(len(transactions_after_delete), 0)
